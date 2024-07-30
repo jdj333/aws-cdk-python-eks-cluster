@@ -6,13 +6,16 @@ image:
   tag: "latest"
 
 service:
-  type: LoadBalancer
+  type: ClusterIP
   port: 80
 
 ingress:
   enabled: true
-  annotations: {}
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
   hosts:
-    - host: chart-example.local
-      paths: []
+    - host: your-domain.com
+      paths:
+        - /
   tls: []

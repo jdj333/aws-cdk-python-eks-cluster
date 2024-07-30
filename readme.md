@@ -12,7 +12,8 @@ cdk_project/
 │   ├── values.yaml
 │   └── templates/
 │       ├── deployment.yaml
-│       └── service.yaml
+│       ├── service.yaml
+│       └── ingress.yaml
 ├── requirements.txt
 └── .github/
     └── workflows/
@@ -71,7 +72,9 @@ cdk_project/
     cdk destroy
     ```
 
-4. **Check the diff between deployed stack and local changes:**
+4. **Check the diff between deployed stack and local
+
+ changes:**
 
     ```sh
     cdk diff

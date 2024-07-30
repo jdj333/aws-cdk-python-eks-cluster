@@ -21,21 +21,48 @@ class EksClusterStack(cdk.Stack):
             )
         )
 
-        # Apply the Helm Chart for NGINX Ingress Controller
-        cluster.add_helm_chart("nginx-ingress",
-            chart="nginx-ingress",
-            repository="https://kubernetes.github.io/ingress-nginx",
+        # Apply the Helm Chart for ALB Ingress Controller
+        cluster.add_helm_chart("alb-ingress-controller",
+            chart="aws-load-balancer-controller",
+            repository="https://aws.github.io/eks-charts",
+            namespace="kube-system",
+            values={
+                "clusterName": cluster.cluster_name,
+                "serviceAccount.create": False,
+                "serviceAccount.name": "aws-load-balancer-controller"
+            }
+        )
+
+        # Create the service account for ALB Ingress Controller
+        alb_sa = cluster.add_service_account("aws-load-balancer-controller",
+            name="aws-load-balancer-controller",
             namespace="kube-system"
         )
 
+        alb_sa.role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEKS_ALB_Ingress_Controller"))
+        alb_sa.role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEKSClusterPolicy"))
+
         # Deploy an NGINX web app with a Helm chart
         cluster.add_helm_chart("nginx-app",
-            chart="nginx",
-            repository="https://charts.bitnami.com/bitnami",
+            chart="nginx-app",
+            repository=".",
             namespace="default",
             values={
                 "service": {
-                    "type": "LoadBalancer"
+                    "type": "ClusterIP"
+                },
+                "ingress": {
+                    "enabled": True,
+                    "annotations": {
+                        "kubernetes.io/ingress.class": "alb",
+                        "alb.ingress.kubernetes.io/scheme": "internet-facing"
+                    },
+                    "hosts": [
+                        {
+                            "host": "your-domain.com",
+                            "paths": ["/"]
+                        }
+                    ]
                 }
             }
         )
